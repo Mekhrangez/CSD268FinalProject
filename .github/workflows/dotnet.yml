@@ -23,6 +23,6 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore ./src/SoftwareTesting.sln
     - name: Build
-      run: dotnet build --no-restore ./src/SoftwareTesting.sln
+      run: dotnet build ./src/SoftwareTesting.sln --no-restore 
     - name: Test
       run: dotnet test ./src/XUnitExamples/XUnitExamples.csproj --no-build --verbosity normal
