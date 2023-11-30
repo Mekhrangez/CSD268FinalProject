@@ -5,39 +5,59 @@
 // http://www.skimedic.com 2022/07/22
 // ==================================
 
-namespace PlaywrightTests;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using Microsoft.Playwright;
+using Xunit;
 
-public class UserInterfaceTests
+namespace PlaywrightTests
 {
-    //https://medium.com/version-1/playwright-a-modern-end-to-end-testing-for-web-app-with-c-language-support-c55e931273ee#:~
-    [Fact]
-    public static async Task VerifyGoogleSearchForPlaywright()
+    public class UserInterfaceTests
     {
-        using IPlaywright playwright = await Playwright.CreateAsync();
-        await using var browser =
-            await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions() { Headless = false, SlowMo = 50 });
-
-        IBrowserContext context = await browser.NewContextAsync();
-
-        IPage page = await context.NewPageAsync();
-        //Navigate to Google.com
-        await page.GotoAsync("https://www.google.com");
-        IReadOnlyList<IFrame> f = page.Frames;
-        if (f.Count > 1)
+        [Fact]
+        public static async Task VerifyLoginToLetsUseData()
         {
-            await f[1].ClickAsync("text=No thanks");
+            // Create Playwright instance
+            using IPlaywright playwright = await Playwright.CreateAsync();
+
+            // Launch browser
+            await using var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions { Headless = false, SlowMo = 50 });
+            IBrowserContext context = await browser.NewContextAsync();
+
+            // Create a new page
+            IPage page = await context.NewPageAsync();
+
+            // Navigate to letsusedata login page
+            await page.GotoAsync("https://letsusedata.com");
+
+            // Fill and submit login form for Test1
+            await page.FillAsync("input[name='username']", "Test1");
+            await page.FillAsync("input[name='password']", "12345678");
+            await Task.WhenAll(
+                page.WaitForNavigationAsync(),
+                page.ClickAsync("button[type='submit']")
+            );
+
+            // Verify Test1 user's login
+            Assert.Equal("https://letsusedata.com/CourseSelection.html", page.Url);
+
+            // Logout Test1 user
+            await page.ClickAsync("button=Logout");
+
+            // Navigate to letsusedata login page again
+            await page.GotoAsync("https://letsusedata.com");
+
+            // Fill and submit login form for Test2
+            await page.FillAsync("input[name='username']", "Test2");
+            await page.FillAsync("input[name='password']", "iF3sBF7c");
+            await Task.WhenAll(
+                page.WaitForNavigationAsync(),
+                page.ClickAsync("button[type='submit']")
+            );
+
+            // Verify Test2 user's login
+            Assert.Equal("https://letsusedata.com/CourseSelection.html", page.Url);
         }
-        // Search Playwright
-        await page.FillAsync("[aria-label=\"Search\"]", "Playwright");
-        // Press Enter
-        var response = await page.RunAndWaitForNavigationAsync(async () => await page.PressAsync("[aria-label=\"Search\"]", "Enter"));
-        //Click on the first search option
-        await page.ClickAsync("xpath=//h3[contains(text(),'Playwright: Fast and reliable end-to-end testing')]");
-        //Verify Page URL
-        Assert.Equal("https://playwright.dev/", page.Url);
-        // Click text=Get started
-        await page.ClickAsync("text=Get Started");
-        //Verify Page URL
-        Assert.Equal("https://playwright.dev/docs/intro", page.Url);
     }
 }
